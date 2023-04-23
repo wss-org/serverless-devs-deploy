@@ -1,12 +1,41 @@
 name: "Deploy Express application to FC"
 steps:
+  - plugin: "@serverless-cd/cache"
+    id: my-cache
+    inputs:
+      key: s-components/v1
+      path: /root/.s/components
+
+      region: cn-hongkong
+      ossConfig:
+        bucket: 1740298130743624-cn-hongkong-serverless-cd
+      credentials:
+        accessKeyID: ${{secrets.ALIYUN_AK}}
+        accessKeySecret: ${{secrets.ALIYUN_SK}}
+  - plugin: "@serverless-cd/cache"
+    id: my-cache
+    inputs:
+      key: ${{hashFile('./src/package.json')}}
+      path: /root/.npm
+
+      region: cn-hongkong
+      ossConfig:
+        bucket: 1740298130743624-cn-hongkong-serverless-cd
+      credentials:
+        accessKeyID: ${{cloudSecrets.AccessKeyID}}
+        accessKeySecret: ${{cloudSecrets.AccessKeySecret}}
   - run: npm i @serverless-devs/s -g --registry=https://registry.npmmirror.com
   - run: s -v
-  - run: echo ${{secrets.ALIYUN_ACCOUNTID}}
-  - run: echo ${{secrets.ALIYUN_AK}}
-  - run: echo ${{secrets.ALIYUN_SK}}
-  - run: s config add --AccountID ${{secrets.ALIYUN_ACCOUNTID}}  --AccessKeyID ${{secrets.ALIYUN_AK}}  --AccessKeySecret ${{secrets.ALIYUN_SK}} -a default -f
-  - run: s deploy --use-local -y
+  - run: npm install --production
+    working-directory: ./code
+  # - run: echo ${{secrets.ALIYUN_ACCOUNTID}}
+  # - run: echo ${{secrets.ALIYUN_AK}}
+  # - run: echo ${{secrets.ALIYUN_SK}}
+  # - run: s config add --AccountID ${{secrets.ALIYUN_ACCOUNTID}}  --AccessKeyID ${{secrets.ALIYUN_AK}}  --AccessKeySecret ${{secrets.ALIYUN_SK}} -a default -f
+  # - run: s deploy --use-local -y
+  - run: s deploy --use-local -y -a default_serverless_devs_access
+    env:
+      default_serverless_devs_access: '{"AccountID":"${{cloudSecrets.AccountID}}","AccessKeyID":"${{cloudSecrets.AccessKeyID}}","AccessKeySecret":"${{cloudSecrets.AccessKeySecret}}"}'
   - name: 钉钉成功通知
     plugin: "@serverless-cd/ding-talk"
     if: ${{ success() }}
