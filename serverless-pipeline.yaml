@@ -7,17 +7,11 @@ steps:
     inputs:
       key: s-components/v1
       path: /root/.s/components
-      cloudSecrets:
-        accessKeyId: cloudSecrets.AccessKeyID
-        accessKeySecret: cloudSecrets.AccessKeySecret
   - plugin: "@serverless-cd/cache"
     id: codeCache
     inputs:
       key: ${{hashFile('./code/package.json')}}
-      path: /root/.npm
-      cloudSecrets:
-        accessKeyId: cloudSecrets.AccessKeyID
-        accessKeySecret: cloudSecrets.AccessKeySecret
+      path: ./code/node_modules
   - run: npm i @serverless-devs/s -g --registry=https://registry.npmmirror.com
   - run: s -v
   - run: npm install --production
