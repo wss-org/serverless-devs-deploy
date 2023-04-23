@@ -9,7 +9,7 @@ steps:
       path: /root/.s/components
       cloudSecrets:
         accessKeyId: cloudSecrets.AccessKeyID
-        accessKeySecret: cloudSecrets.accessKeySecret
+        accessKeySecret: cloudSecrets.AccessKeySecret
   - plugin: "@serverless-cd/cache"
     id: codeCache
     inputs:
