@@ -1,38 +1,22 @@
 name: "Deploy Express application to FC"
 steps:
+  - run: echo "请关联一个阿里云密钥" && xxxxx
+    if: ${{!!cloudSecrets.AccountID}}
   - plugin: "@serverless-cd/cache"
-    id: my-cache
+    id: sCacheComponents
     inputs:
       key: s-components/v1
       path: /root/.s/components
-
-      region: cn-hongkong
-      ossConfig:
-        bucket: 1740298130743624-cn-hongkong-serverless-cd
-      credentials:
-        accessKeyID: ${{secrets.AccessKeyID}}
-        accessKeySecret: ${{secrets.AccessKeySecret}}
   - plugin: "@serverless-cd/cache"
-    id: my-cache
+    id: codeCache
     inputs:
       key: ${{hashFile('./code/package.json')}}
       path: /root/.npm
-
-      region: cn-hongkong
-      ossConfig:
-        bucket: 1740298130743624-cn-hongkong-serverless-cd
-      credentials:
-        accessKeyID: ${{cloudSecrets.AccessKeyID}}
-        accessKeySecret: ${{cloudSecrets.AccessKeySecret}}
   - run: npm i @serverless-devs/s -g --registry=https://registry.npmmirror.com
   - run: s -v
   - run: npm install --production
     working-directory: ./code
-  # - run: echo ${{secrets.ALIYUN_ACCOUNTID}}
-  # - run: echo ${{secrets.ALIYUN_AK}}
-  # - run: echo ${{secrets.ALIYUN_SK}}
-  # - run: s config add --AccountID ${{secrets.ALIYUN_ACCOUNTID}}  --AccessKeyID ${{secrets.ALIYUN_AK}}  --AccessKeySecret ${{secrets.ALIYUN_SK}} -a default -f
-  # - run: s deploy --use-local -y
+    if: ${{steps.codeCache.outputs['cache-hit'] != 'true'}}
   - run: s deploy --use-local -y -a default_serverless_devs_access
     env:
       default_serverless_devs_access: '{"AccountID":"${{cloudSecrets.AccountID}}","AccessKeyID":"${{cloudSecrets.AccessKeyID}}","AccessKeySecret":"${{cloudSecrets.AccessKeySecret}}"}'
