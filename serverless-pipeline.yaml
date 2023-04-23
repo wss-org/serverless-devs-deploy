@@ -30,7 +30,8 @@ steps:
     inputs:
       webhook: https://oapi.dingtalk.com/robot/send?access_token=${{secrets.DING_TALK_TOKEN}}
       msgtype: markdown
-      secret: ${{secrets.DING_TALK_SECRET}}
+      # secret: ${{secrets.DING_TALK_SECRET}} #  如果加签才需要配置
+      continue-on-error: true # 失败不阻塞程序运行
       payload:
         title: "Serverless CD"
         text: |+
@@ -48,7 +49,8 @@ steps:
     inputs:
       webhook: https://oapi.dingtalk.com/robot/send?access_token=${{secrets.DING_TALK_TOKEN}}
       msgtype: markdown
-      secret: ${{secrets.DING_TALK_SECRET}}
+      # secret: ${{secrets.DING_TALK_SECRET}}
+      continue-on-error: true
       payload:
         title: "Serverless CD"
         text: |+
