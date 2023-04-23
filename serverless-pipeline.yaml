@@ -1,7 +1,7 @@
 name: "Deploy Express application to FC"
 steps:
   - run: echo "请关联一个阿里云密钥" && xxxxx
-    if: ${{typeof cloudSecrets.AccessKeyID === 'string'}}
+    if: ${{typeof cloudSecrets.AccessKeyID !== 'string'}}
   - plugin: "@serverless-cd/cache"
     id: sCacheComponents
     inputs:
