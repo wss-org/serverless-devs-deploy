@@ -1,9 +1,5 @@
 name: "Deploy Express application to FC"
 
-# name
-# strapi
-# issue
-
 steps:
   - name: 缓存devs工具组件
     plugin: "@serverless-cd/cache"
@@ -17,69 +13,55 @@ steps:
     inputs:
       key: ${{hashFile('./code/package.json')}}
       path: ./code/node_modules
-
-  - run: echo ${{ steps.codeCache.outputs['cache-hit'] }}
-    continue-on-error: true
-  - run: echo ${{ typeof steps.codeCache.outputs['cache-hit'] }}
-    continue-on-error: true
-  - run: echo ${{ steps.codeCache.outputs['cache-hit'] != 'true' }}
-    continue-on-error: true
-  - run: echo ${{ steps.codeCache.outputs['cache-hit'] != true }}
-    continue-on-error: true
-  - run: ls -al 
+  - name: 安装devs工具
+    run: npm i @serverless-devs/s -g --registry=https://registry.npmmirror.com
+  - run: s -v
+  - name: 安装代码包依赖
+    run: npm install --production
     working-directory: ./code
-  - run: ls -al 
-    working-directory: ./code/node_modules
-
-  # - name: 安装devs工具
-  #   run: npm i @serverless-devs/s -g --registry=https://registry.npmmirror.com
-  # - run: s -v
-  # - name: 安装代码包依赖
-  #   run: npm install --production
-  #   working-directory: ./code
-  #   if: ${{steps.codeCache.outputs['cache-hit'] != 'true'}} # codeCache 对应使用插件的 ID
-  # - name: 部署函数
-  #   run: s deploy --use-local -y -a default_serverless_devs_access
-  #   env:
-  #     # 关联云账号使用方式：推荐。因为这种使用方式不需要在插件 @serverless-cd/cache 里面声明 credentials 字段了
-  #     default_serverless_devs_access: '{"AccountID":"${{cloudSecrets.AccountID}}","AccessKeyID":"${{cloudSecrets.AccessKeyID}}","AccessKeySecret":"${{cloudSecrets.AccessKeySecret}}"}'
-  #     # 通过 secrets 配置
-  #     # default_serverless_devs_access: '{"AccountID":"${{secrets.AccountID}}","AccessKeyID":"${{secrets.AccessKeyID}}","AccessKeySecret":"${{secrets.AccessKeySecret}}"}'
-  # - name: 钉钉成功通知
-  #   plugin: "@serverless-cd/ding-talk"
-  #   if: ${{ success() }}
-  #   continue-on-error: true # 失败不阻塞程序运行
-  #   inputs:
-  #     webhook: https://oapi.dingtalk.com/robot/send?access_token=${{secrets.DING_TALK_TOKEN}}
-  #     msgtype: markdown
-  #     # secret: ${{secrets.DING_TALK_SECRET}} #  如果加签才需要配置
-  #     payload:
-  #       title: "Serverless CD"
-  #       text: |+
-  #         ![image](https://img.alicdn.com/imgextra/i3/O1CN01DJ0QXx1iLPt5nGCBT_!!6000000004396-2-tps-468-57.png)
-  #         ### [流水线](${{ task.url }})(Serverless CD)-运行成功
-  #         **任务**: [#${{task.id}}](${{ task.url }})
-  #         **触发事件**: ${{ git.event_name }}
-  #         **分支**: ${{ git.branch }}     
-  #         **提交人**: ${{ git.pusher.name }}
-  #         **commit id**: ${{ git.commit }}
-  #         **commit message**: ${{ git.message }}
-  # - name: 钉钉失败通知
-  #   plugin: "@serverless-cd/ding-talk"
-  #   if: ${{ failure() }}
-  #   continue-on-error: true
-  #   inputs:
-  #     webhook: https://oapi.dingtalk.com/robot/send?access_token=${{secrets.DING_TALK_TOKEN}}
-  #     msgtype: markdown
-  #     # secret: ${{secrets.DING_TALK_SECRET}}
-  #     payload:
-  #       title: "Serverless CD"
-  #       text: |+
-  #         ![image](https://img.alicdn.com/imgextra/i3/O1CN01DJ0QXx1iLPt5nGCBT_!!6000000004396-2-tps-468-57.png)
-  #         ### [流水线](${{ task.url }})(Serverless CD)-运行失败
-  #         **任务**: [#${{task.id}}](${{ task.url }})
-  #         **触发事件**: ${{ git.event_name }}
-  #         **分支**: ${{ git.branch }}   
-  #         **提交人**: ${{ git.pusher.name }}
-  #         **commit id**: ${{ git.commit }}
-  #         **commit message**: ${{ git.message }}
+    if: ${{steps.codeCache.outputs['cache-hit'] != true}} # codeCache 对应使用插件的 ID
+  - name: 部署函数
+    run: s deploy --use-local -y -a default_serverless_devs_access
+    env:
+      # 关联云账号使用方式：推荐。因为这种使用方式不需要在插件 @serverless-cd/cache 里面声明 credentials 字段了
+      default_serverless_devs_access: '{"AccountID":"${{cloudSecrets.AccountID}}","AccessKeyID":"${{cloudSecrets.AccessKeyID}}","AccessKeySecret":"${{cloudSecrets.AccessKeySecret}}"}'
+      # 通过 secrets 配置
+      # default_serverless_devs_access: '{"AccountID":"${{secrets.AccountID}}","AccessKeyID":"${{secrets.AccessKeyID}}","AccessKeySecret":"${{secrets.AccessKeySecret}}"}'
+  - name: 钉钉成功通知
+    plugin: "@serverless-cd/ding-talk"
+    if: ${{ success() }}
+    continue-on-error: true # 失败不阻塞程序运行
+    inputs:
+      webhook: https://oapi.dingtalk.com/robot/send?access_token=${{secrets.DING_TALK_TOKEN}}
+      msgtype: markdown
+      # secret: ${{secrets.DING_TALK_SECRET}} #  如果加签才需要配置
+      payload:
+        title: "Serverless CD"
+        text: |+
+          ![image](https://img.alicdn.com/imgextra/i3/O1CN01DJ0QXx1iLPt5nGCBT_!!6000000004396-2-tps-468-57.png)
+          ### [流水线](${{ task.url }})(Serverless CD)-运行成功
+          **任务**: [#${{task.id}}](${{ task.url }})
+          **触发事件**: ${{ git.event_name }}
+          **分支**: ${{ git.branch }}     
+          **提交人**: ${{ git.pusher.name }}
+          **commit id**: ${{ git.commit }}
+          **commit message**: ${{ git.message }}
+  - name: 钉钉失败通知
+    plugin: "@serverless-cd/ding-talk"
+    if: ${{ failure() }}
+    continue-on-error: true
+    inputs:
+      webhook: https://oapi.dingtalk.com/robot/send?access_token=${{secrets.DING_TALK_TOKEN}}
+      msgtype: markdown
+      # secret: ${{secrets.DING_TALK_SECRET}}
+      payload:
+        title: "Serverless CD"
+        text: |+
+          ![image](https://img.alicdn.com/imgextra/i3/O1CN01DJ0QXx1iLPt5nGCBT_!!6000000004396-2-tps-468-57.png)
+          ### [流水线](${{ task.url }})(Serverless CD)-运行失败
+          **任务**: [#${{task.id}}](${{ task.url }})
+          **触发事件**: ${{ git.event_name }}
+          **分支**: ${{ git.branch }}   
+          **提交人**: ${{ git.pusher.name }}
+          **commit id**: ${{ git.commit }}
+          **commit message**: ${{ git.message }}
