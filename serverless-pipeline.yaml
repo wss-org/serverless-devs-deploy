@@ -10,12 +10,12 @@ steps:
       ossConfig:
         bucket: 1740298130743624-cn-hongkong-serverless-cd
       credentials:
-        accessKeyID: ${{secrets.ALIYUN_AK}}
-        accessKeySecret: ${{secrets.ALIYUN_SK}}
+        accessKeyID: ${{secrets.AccessKeyID}}
+        accessKeySecret: ${{secrets.AccessKeySecret}}
   - plugin: "@serverless-cd/cache"
     id: my-cache
     inputs:
-      key: ${{hashFile('./src/package.json')}}
+      key: ${{hashFile('./code/package.json')}}
       path: /root/.npm
 
       region: cn-hongkong
