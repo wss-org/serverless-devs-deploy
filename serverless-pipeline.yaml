@@ -13,8 +13,10 @@ steps:
     inputs:
       key: ${{hashFile('./code/package.json')}}
       path: ./code/node_modules
-  - name: 安装devs工具
-    run: npm i @serverless-devs/s -g --registry=https://registry.npmmirror.com
+  - name: 初始化S工具
+    plugin: "@serverless-cd/s-setup"
+    inputs:
+      alias: default_serverless_devs_access
   - run: s -v
   - name: 安装代码包依赖
     run: npm install --production
@@ -22,14 +24,10 @@ steps:
     if: ${{steps.codeCache.outputs['cache-hit'] != true}} # codeCache 对应使用插件的 ID
   - name: 部署函数
     run: s deploy --use-local -y -a default_serverless_devs_access
-    env:
-      # 关联云账号使用方式：推荐。因为这种使用方式不需要在插件 @serverless-cd/cache 里面声明 credentials 字段了
-      default_serverless_devs_access: '{"AccountID":"${{cloudSecrets.AccountID}}","AccessKeyID":"${{cloudSecrets.AccessKeyID}}","AccessKeySecret":"${{cloudSecrets.AccessKeySecret}}"}'
-      # 通过 secrets 配置
-      # default_serverless_devs_access: '{"AccountID":"${{secrets.AccountID}}","AccessKeyID":"${{secrets.AccessKeyID}}","AccessKeySecret":"${{secrets.AccessKeySecret}}"}'
   - name: 钉钉成功通知
     plugin: "@serverless-cd/ding-talk"
     if: ${{ success() }}
+    continue-on-error: true # 失败不阻塞程序运行
     inputs:
       webhook: https://oapi.dingtalk.com/robot/send?access_token=${{secrets.DING_TALK_TOKEN}}
       msgtype: markdown
@@ -48,6 +46,7 @@ steps:
   - name: 钉钉失败通知
     plugin: "@serverless-cd/ding-talk"
     if: ${{ failure() }}
+    continue-on-error: true
     inputs:
       webhook: https://oapi.dingtalk.com/robot/send?access_token=${{secrets.DING_TALK_TOKEN}}
       msgtype: markdown
